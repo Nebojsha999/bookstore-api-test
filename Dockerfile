@@ -1,7 +1,10 @@
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production=false
-COPY . .
-ENV BASE_URL=https://fakerestapi.azurewebsites.net
-CMD ["npm", "test"]
+FROM jenkins/agent:latest-jdk17
+
+# Install Docker CLI
+USER root
+RUN apt-get update && \
+    apt-get install -y docker.io && \
+    rm -rf /var/lib/apt/lists/*
+
+# Switch back to Jenkins user
+USER jenkins
