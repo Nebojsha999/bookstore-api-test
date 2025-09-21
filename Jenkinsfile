@@ -23,16 +23,12 @@ pipeline {
         stage('Run Tests in Container') {
             steps {
                 echo "Running tests inside Docker container..."
+                sh "mkdir -p \"${WORKSPACE}/reports\""
 
-                // Ensure reports folder exists in workspace
-                sh "mkdir -p ${WORKSPACE}/reports"
-
-                // Run Docker container, explicitly call npm test, avoid ENTRYPOINT conflicts
                 sh """
                     docker run --rm \
-                        --network host \
                         -e BASE_URL=${BASE_URL} \
-                        -v ${WORKSPACE}/reports:/app/reports \
+                        -v \"${WORKSPACE}/reports:/app/reports\" \
                         --entrypoint "" \
                         ${DOCKER_IMAGE} \
                         npm test
@@ -43,10 +39,7 @@ pipeline {
 
     post {
         always {
-            // Archive test artifacts (JUnit XML)
             junit allowEmptyResults: true, testResults: 'reports/**/*.xml'
-            
-            // Archive other artifacts if needed
             archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
         }
     }
