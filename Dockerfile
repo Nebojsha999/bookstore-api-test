@@ -1,31 +1,34 @@
+# Start from Jenkins agent with JDK 17
 FROM jenkins/agent:latest-jdk17
 
-# Install Docker CLI, curl, and Node.js LTS
+# Switch to root to install dependencies
 USER root
+
+# Install Docker CLI, curl, Node.js LTS
 RUN apt-get update && \
     apt-get install -y docker.io curl && \
     curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-# Add Jenkins user to docker group
+# Add Jenkins user to docker group (optional)
 RUN usermod -aG docker jenkins
 
-# Create app folder and set permissions
+# Create /app folder for project and give permissions
 RUN mkdir -p /app && chown -R jenkins:jenkins /app
 
-# Switch to Jenkins user
+# Switch to jenkins user
 USER jenkins
+
+# Set working directory
 WORKDIR /app
 
-# Copy package.json first for caching
+# Copy package.json and package-lock.json and install dependencies
 COPY --chown=jenkins:jenkins package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy rest of app files
+# Copy the rest of the project files
 COPY --chown=jenkins:jenkins . .
 
-# Default command
+# Default CMD can be overridden by Jenkins
 CMD ["bash"]
